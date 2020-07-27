@@ -430,7 +430,9 @@ editHandlers.compositionstart = editHandlers.compositionupdate = view => {
         }
       }
     }
-    view.composing = true
+    if (!browser.ios && !browser.safari) {
+      view.composing = true  
+    }
   }
   scheduleComposeEnd(view, timeoutComposition)
 }
