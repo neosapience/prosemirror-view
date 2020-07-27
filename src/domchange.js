@@ -204,8 +204,13 @@ export function readDOMChange(view, from, to, typeOver, addedNodes) {
                                  $from1.parent.content.cut($from1.parentOffset, change.endA - $from1.start())))
     ) {
       tr = view.state.tr
-      if (markChange.type == "add") tr.addMark(chFrom, chTo, markChange.mark)
-      else tr.removeMark(chFrom, chTo, markChange.mark)
+      if (markChange.type == "add") {
+        tr.addMark(chFrom, chTo, markChange.mark)
+      }
+      // workaround: play-done인 문장을 편집했다가 다시 원래대로 돌려서 play-done상태로 바꾸면 mark가 날아가는 문제 해결
+      // else {
+      //   tr.removeMark(chFrom, chTo, markChange.mark)
+      // }
     } else if ($from.parent.child($from.index()).isText && $from.index() == $to.index() - ($to.textOffset ? 0 : 1)) {
       // Both positions in the same text node -- simply insert text
       let text = $from.parent.textBetween($from.parentOffset, $to.parentOffset)
