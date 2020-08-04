@@ -9,6 +9,7 @@ import {parseFromClipboard, serializeForClipboard} from "./clipboard"
 import {DOMObserver} from "./domobserver"
 import {selectionBetween, selectionToDOM, selectionFromDOM} from "./selection"
 import {keyEvent} from "./dom"
+import nanoid from 'nanoid'
 
 // A collection of DOM events that occur within the editor, and callback functions
 // to invoke when the event fires.
@@ -532,7 +533,63 @@ async function doPaste(view, text, html, e) {
   if (view.someProp("handlePaste", f => f(view, e, slice || Slice.empty)) || !slice) return
 
   let singleNode = sliceSingleNode(slice)
-  let tr = singleNode ? view.state.tr.replaceSelectionWith(singleNode, view.shiftKey) : view.state.tr.replaceSelection(slice)
+  
+  // pasted between text
+  const state = view.state
+  const {$from, $to, $cursor} = state.selection
+  let tr = state.tr
+
+  let leftQuery = []
+  let rightQuery = []
+  let rightSilence = 300
+  let leftText = ''
+  let rightText = ''
+  let rightSeparator = false
+
+  if ($from.nodeBefore) {
+    leftQuery = $from.nodeBefore.marks.filter(mark => mark.type.name === 'query')
+    leftText = $from.nodeBefore.text
+  }
+
+  if ($to.nodeAfter) {
+    rightQuery = $to.nodeAfter.marks.filter(mark => mark.type.name === 'query')
+    if (rightQuery.length) {
+      rightSilence = $to.nodeAfter.marks[0].attrs.silence
+    }
+    rightText = $to.nodeAfter.text
+    if ($to.nodeAfter.type.name === 'separator') {
+      rightSeparator = true
+    }
+  }
+  const position = $cursor ? $cursor.pos : $from.pos
+  if ($from.nodeBefore) {
+    if (leftText) {
+      if (rightQuery.length && rightText.length) {
+        tr.removeMark(position, position + rightText.length, rightQuery[0]).addMark(
+          position,
+          position + rightText.length,
+          state.schema.marks.query.create({id: nanoid()}),
+        )
+        if (rightQuery[0].attrs.silence !== 300) {
+          tr.updateQueryAttrs(
+            $from.pos - leftText.length,
+            $from.pos,
+            state.schema.marks.query.create({silence: 300}),
+            {silence: 300},
+          )
+          tr.updateQueryAttrs(
+            position,
+            position + rightText.length,
+            state.schema.marks.query.create({silence: rightQuery[0].attrs.silence}),
+            {silence: rightQuery[0].attrs.silence},
+          )
+        }
+      }
+      const node = state.schema.nodes.separator.create()
+      tr.insert(position, node)
+    }
+  }
+  singleNode ? tr.replaceSelectionWith(singleNode, view.shiftKey) : tr.replaceSelection(slice)
   view.dispatch(tr.scrollIntoView().setMeta("paste", true).setMeta("uiEvent", "paste"))
 }
 
