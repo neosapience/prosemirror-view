@@ -71,10 +71,24 @@ export async function parseFromClipboard(view, text, html, plainText, $context) 
       const lastCharacter = text.slice(-1)
       let queryElement = document.createElement("span")
       queryElement.setAttribute('data-query-id', nanoid())
+      let savedQueryAttr = localStorage.getItem('DEFAULT_QUERY_ATTR')
+      if (savedQueryAttr) {
+        savedQueryAttr = JSON.parse(savedQueryAttr)
+      } else {
+        savedQueryAttr = {}
+      }
       if (lastCharacter === '.' || lastCharacter === '!' || lastCharacter === '?' ) {
         queryElement.setAttribute('data-query-silence', 300)
+        let silence = savedQueryAttr.silence || 300
+        let speed = savedQueryAttr.speed || 1
+        queryElement.setAttribute('data-query-silence', silence)
+        queryElement.setAttribute('data-query-speed', speed)
       } else {
         queryElement.setAttribute('data-query-silence', 100)
+        let silence = savedQueryAttr.silence || 100
+        let speed = savedQueryAttr.speed || 1
+        queryElement.setAttribute('data-query-silence', silence)
+        queryElement.setAttribute('data-query-speed', speed)
       }
       
       queryElement.className = 'query'
