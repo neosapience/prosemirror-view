@@ -539,13 +539,21 @@ async function doPaste(view, text, html, e) {
   const {$from, $to, $cursor} = state.selection
   let tr = state.tr
 
+  let savedQueryAttr = localStorage.getItem('DEFAULT_QUERY_ATTR')
+  if (savedQueryAttr) {
+    savedQueryAttr = JSON.parse(savedQueryAttr)
+  } else {
+    savedQueryAttr = {}
+  }
+
   let leftQuery = []
   let rightQuery = []
-  let rightSilence = 300
+  let rightSilence = savedQueryAttr.silence || 300
   let leftText = ''
   let rightText = ''
   let rightSeparator = false
-
+  let speed = savedQueryAttr.speed || 1
+  const usetSettingSilence = savedQueryAttr.silence || 300
   if ($from.nodeBefore) {
     leftQuery = $from.nodeBefore.marks.filter(mark => mark.type.name === 'query')
     leftText = $from.nodeBefore.text
@@ -568,20 +576,20 @@ async function doPaste(view, text, html, e) {
         tr.removeMark(position, position + rightText.length, rightQuery[0]).addMark(
           position,
           position + rightText.length,
-          state.schema.marks.query.create({id: nanoid()}),
+          state.schema.marks.query.create({id: nanoid(), silence: rightSilence, speed}),
         )
-        if (rightQuery[0].attrs.silence !== 300) {
+        if (rightQuery[0].attrs.silence !== usetSettingSilence) {
           tr.updateQueryAttrs(
             $from.pos - leftText.length,
             $from.pos,
-            state.schema.marks.query.create({silence: 300}),
-            {silence: 300},
+            state.schema.marks.query.create({silence: usetSettingSilence, speed}),
+            {silence: usetSettingSilence, speed},
           )
           tr.updateQueryAttrs(
             position,
             position + rightText.length,
-            state.schema.marks.query.create({silence: rightQuery[0].attrs.silence}),
-            {silence: rightQuery[0].attrs.silence},
+            state.schema.marks.query.create({silence: rightQuery[0].attrs.silence, speed}),
+            {silence: rightQuery[0].attrs.silence, speed},
           )
         }
       }
