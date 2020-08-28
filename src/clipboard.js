@@ -78,19 +78,16 @@ export async function parseFromClipboard(view, text, html, plainText, $context) 
         savedQueryAttr = {}
       }
       if (lastCharacter === '.' || lastCharacter === '!' || lastCharacter === '?' ) {
-        queryElement.setAttribute('data-query-silence', 300)
         let silence = savedQueryAttr.silence || 300
         let speed = savedQueryAttr.speed || 1
         queryElement.setAttribute('data-query-silence', silence)
         queryElement.setAttribute('data-query-speed', speed)
       } else {
-        queryElement.setAttribute('data-query-silence', 100)
         let silence = savedQueryAttr.silence || 100
         let speed = savedQueryAttr.speed || 1
         queryElement.setAttribute('data-query-silence', silence)
         queryElement.setAttribute('data-query-speed', speed)
       }
-      
       queryElement.className = 'query'
       queryElement.textContent = text
 
