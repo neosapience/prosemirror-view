@@ -545,15 +545,23 @@ async function doPaste(view, text, html, e) {
   } else {
     savedQueryAttr = {}
   }
-
+  const parent = $from.parent.type.name === 'paragraph' ? $from.parent : null
+  const paragraphActorId = parent ? parent.attrs.actor : null
+  let savedQuerySilence
+  let savedQuerySpeed
+  if (savedQueryAttr.hasOwnProperty(paragraphActorId)) {
+    savedQuerySilence = savedQueryAttr[paragraphActorId].silence
+    savedQuerySpeed = savedQueryAttr[paragraphActorId].speed
+  }
+  
   let leftQuery = []
   let rightQuery = []
-  let rightSilence = savedQueryAttr.silence || 300
+  let rightSilence = savedQuerySilence || 300
   let leftText = ''
   let rightText = ''
   let rightSeparator = false
-  let speed = savedQueryAttr.speed || 1
-  const usetSettingSilence = savedQueryAttr.silence || 300
+  let speed = savedQuerySpeed || 1
+  const usetSettingSilence = savedQuerySilence || 300
   if ($from.nodeBefore) {
     leftQuery = $from.nodeBefore.marks.filter(mark => mark.type.name === 'query')
     leftText = $from.nodeBefore.text

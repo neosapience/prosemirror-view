@@ -57,7 +57,12 @@ export async function parseFromClipboard(view, text, html, plainText, $context) 
   const handler = view.someProp("handleTextSplitter")
   const response = await handler(text)
   let actorId = $context.node().attrs.actor
-
+  let paragraphActorId
+  const _$from = view.state.selection.$from
+  if (_$from && _$from.parent) {
+    const parent = _$from.parent.type.name === 'paragraph' ? _$from.parent : null
+    paragraphActorId = parent ? parent.attrs.actor : null
+  }
   if (!response) return null
   if (response.hasOwnProperty('result')) {
     blocks = response.result
@@ -77,14 +82,20 @@ export async function parseFromClipboard(view, text, html, plainText, $context) 
       } else {
         savedQueryAttr = {}
       }
+      let savedQuerySilence
+      let savedQuerySpeed
+      if (savedQueryAttr.hasOwnProperty(paragraphActorId)) {
+        savedQuerySilence = savedQueryAttr[paragraphActorId].silence
+        savedQuerySpeed = savedQueryAttr[paragraphActorId].speed
+      }
       if (lastCharacter === '.' || lastCharacter === '!' || lastCharacter === '?' ) {
-        let silence = savedQueryAttr.silence || 300
-        let speed = savedQueryAttr.speed || 1
+        let silence = savedQuerySilence || 300
+        let speed = savedQuerySpeed || 1
         queryElement.setAttribute('data-query-silence', silence)
         queryElement.setAttribute('data-query-speed', speed)
       } else {
-        let silence = savedQueryAttr.silence || 100
-        let speed = savedQueryAttr.speed || 1
+        let silence = savedQuerySilence || 100
+        let speed = savedQuerySpeed || 1
         queryElement.setAttribute('data-query-silence', silence)
         queryElement.setAttribute('data-query-speed', speed)
       }
